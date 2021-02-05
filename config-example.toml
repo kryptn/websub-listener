@@ -1,0 +1,16 @@
+publicUrl = "https://websub.example.com"
+
+websubSubscribeHost = "https://pubsubhubbub.appspot.com/subscribe"
+
+verifyToken = "dILVKUkteZ5nG7U6BVhT8BZWfabaK77BDK0aev4ldt0CvCLuxS5K7qGQGjiQ5YH7"
+
+[destinations]
+notifications = "https://hooks.slack.com/services/your/incoming/webhook"
+
+[listener.channel1]
+topicUrl = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=CHANNEL_1_ID"
+destination = "notifications"
+
+[listener.channel2]
+topicUrl = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=CHANNEL_2_ID"
+destination = "notifications"
