@@ -47,9 +47,9 @@ func awaitSignals() {
 		done <- true
 	}()
 
-	fmt.Println("awaiting signal")
+	log.Print("awaiting signal")
 	<-done
-	fmt.Println("exiting")
+	log.Print("exiting")
 }
 
 func main() {
