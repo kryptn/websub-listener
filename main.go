@@ -53,8 +53,7 @@ func awaitSignals() {
 }
 
 func main() {
-
-	log.Printf("oh we're gonna try ")
+	log.Printf("starting")
 
 	config := getConfig()
 
@@ -68,7 +67,7 @@ func main() {
 		log.Fatal(http.ListenAndServe(":8080", mux))
 	}()
 
-	config.WatchSubs(300)
+	config.WatchSubs(600)
 
 	awaitSignals()
 }

@@ -11,8 +11,6 @@ import (
 type Cache struct {
 	Leases map[string]int64
 	Posts  map[string][]string
-
-	leaseRenewers map[string]func()
 }
 
 func NewCache() *Cache {
