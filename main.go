@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 var debug = false
@@ -66,22 +65,10 @@ func main() {
 	config.RegisterListeners(mux)
 
 	go func() {
-		log.Fatal(http.ListenAndServe(":9090", mux))
+		log.Fatal(http.ListenAndServe(":8080", mux))
 	}()
 
-	for true {
-		resp, err := http.Get(fmt.Sprintf("%s/healthz", config.PublicURL))
-		if err != nil {
-			log.Printf("Waiting until URL is public")
-			time.Sleep(time.Second * 5)
-		}
-
-		if resp.StatusCode == http.StatusOK {
-			break
-		}
-	}
-
-	go config.WatchSubs(300)
+	config.WatchSubs(300)
 
 	awaitSignals()
 }
