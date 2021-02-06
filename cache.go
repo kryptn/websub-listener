@@ -2,13 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
 )
 
 type Cache struct {
-	Leases map[string]int
+	Leases map[string]int64
 	Posts  map[string][]string
 
 	leaseRenewers map[string]func()
@@ -16,16 +17,10 @@ type Cache struct {
 
 func NewCache() *Cache {
 	return &Cache{
-		Leases: map[string]int{},
+		Leases: map[string]int64{},
 		Posts:  map[string][]string{},
 	}
 }
-
-// func init() {
-// 	internalCache = NewCache()
-// }
-
-// var internalCache Cache
 
 // SetLease will set the subscription lease timer for a given slug
 func (c *Cache) SetLease(slug string, t string) {
@@ -35,7 +30,13 @@ func (c *Cache) SetLease(slug string, t string) {
 		lease = 300
 	}
 
-	leaseExp := int(time.Now().Unix()) + lease - int(lease/5)
+	now := time.Now().Unix()
+
+	l := int64(lease)
+	leaseExp := now + l - l/5
+
+	log.Printf("leaseExp: %d, now: %d", leaseExp, now)
+
 	c.Leases[slug] = leaseExp
 }
 

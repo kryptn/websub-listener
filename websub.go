@@ -1,15 +1,17 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/spf13/viper"
 )
 
-func (s *Subscription) SendSubscribe() {
+func (s Subscription) params() url.Values {
 	params := url.Values{}
 	params.Add("hub.mode", "subscribe")
 	params.Add("hub.topic", s.TopicURL)
@@ -17,7 +19,12 @@ func (s *Subscription) SendSubscribe() {
 	params.Add("hub.verify", "sync")
 	params.Add("hub.verify_token", s.VerifyToken)
 
-	resp, err := http.PostForm(viper.GetString("websubSubscribeHost"), params)
+	return params
+}
+
+func (s *Subscription) RenewSubscription() {
+
+	resp, err := http.PostForm(viper.GetString("websubSubscribeHost"), s.params())
 	if err != nil {
 		panic(err)
 	}
@@ -25,4 +32,61 @@ func (s *Subscription) SendSubscribe() {
 	log.Printf("%s", resp.Status)
 
 	defer resp.Body.Close()
+}
+
+func healthy(url string) bool {
+	resp, err := http.Get(fmt.Sprintf("%s/healthz", url))
+	return err == nil && resp.StatusCode == http.StatusOK
+
+}
+
+func waitForPublic(url string, timeout, attempts int) error {
+
+	timeoutDuration := time.Second * time.Duration(timeout)
+
+	usedAttempts := 0
+
+	for true {
+
+		log.Printf("checking public endpoint")
+		if healthy(url) {
+			log.Printf("checking public endpoint -- ok")
+			return nil
+		}
+
+		usedAttempts++
+		if usedAttempts >= attempts {
+			break
+		}
+
+		log.Printf("checking public endpoint -- failed, waiting")
+		time.Sleep(timeoutDuration)
+
+	}
+	msg := fmt.Sprintf("could not hit public healthcheck url after %d attempts", usedAttempts)
+	return errors.New(msg)
+}
+
+func (c *Config) WatchSubs(timeout int) {
+	if err := waitForPublic(c.PublicURL, 10, 10); err != nil {
+		panic(err)
+	}
+
+	waitTime := time.Second * time.Duration(timeout)
+
+	for true {
+		now := time.Now().Unix()
+		for name, listener := range c.Listeners {
+			lease, ok := c.Cache.Leases[name]
+			if !ok || now > lease {
+				log.Printf("renewing %s subscription", name)
+				listener.RenewSubscription()
+			} else {
+				log.Printf("%s subscription has %d seconds left", name, lease-now)
+			}
+		}
+
+		time.Sleep(waitTime)
+	}
+
 }

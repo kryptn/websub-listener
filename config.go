@@ -45,7 +45,7 @@ func getConfig() *Config {
 	for name, listener := range config.Listeners {
 		var l Subscription
 
-		l.Slug = name[:]
+		l.Slug = name
 		log.Printf("setting config slug %s", name)
 		l.TopicURL = listener.TopicURL
 		l.VerifyToken = config.VerifyToken

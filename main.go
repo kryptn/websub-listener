@@ -81,13 +81,7 @@ func main() {
 		}
 	}
 
-	time.Sleep(time.Second * 2)
-
-	for name, listener := range config.Listeners {
-
-		log.Printf("sending subscribe for %s", name)
-		listener.SendSubscribe()
-	}
+	go config.WatchSubs(300)
 
 	awaitSignals()
 }

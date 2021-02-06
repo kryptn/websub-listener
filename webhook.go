@@ -82,6 +82,8 @@ func (s Subscription) MakeHandler() http.HandlerFunc {
 
 }
 
+
+
 func (c *Config) RegisterListeners(mux *http.ServeMux) {
 	for name, listener := range c.Listeners {
 		mux.HandleFunc(listener.endpoint(), listener.MakeHandler())
