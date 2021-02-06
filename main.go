@@ -15,10 +15,10 @@ var debug = false
 type Config struct {
 	PublicURL           string                  `mapstructure:"publicUrl"`
 	Listeners           map[string]Subscription `mapstructure:"listener"`
-	ListenerSecrets     map[string]Subscription `mapstructure:"secret"`
 	Destinations        map[string]string       `mapstructure:"destinations"`
 	VerifyToken         string                  `mapstructure:"verifyToken"`
 	WebsubSubscribeHost string                  `mapstructure:"websubSubscribeHost"`
+	Cache               *Cache
 }
 
 type Subscription struct {
@@ -28,6 +28,7 @@ type Subscription struct {
 	Parser      string
 	PostURL     string
 	Destination string
+	Cache       *Cache
 }
 
 func (s *Subscription) endpoint() string {
@@ -65,7 +66,7 @@ func main() {
 	config.RegisterListeners(mux)
 
 	go func() {
-		log.Fatal(http.ListenAndServe(":8080", mux))
+		log.Fatal(http.ListenAndServe(":9090", mux))
 	}()
 
 	for true {

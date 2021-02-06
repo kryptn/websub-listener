@@ -10,7 +10,7 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-func (s *Subscription) getHandler(w http.ResponseWriter, r *http.Request) {
+func (s Subscription) getHandler(w http.ResponseWriter, r *http.Request) {
 	if mode, ok := r.URL.Query()["hub.mode"]; !ok || len(mode) == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -30,7 +30,10 @@ func (s *Subscription) getHandler(w http.ResponseWriter, r *http.Request) {
 			leases = []string{"3600"}
 		}
 		lease := leases[0]
-		SetLease(s.Slug, lease)
+		// spew.Dump(s)
+		s.Cache.SetLease(s.Slug, lease)
+		log.Printf("setting lease %s for %s", s.Slug, lease)
+
 		log.Printf("got challenge: %s -- responding", challenge[0])
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, challenge[0])
@@ -38,7 +41,7 @@ func (s *Subscription) getHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Subscription) postHandler(w http.ResponseWriter, r *http.Request) {
+func (s Subscription) postHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("oh yeah we're writing")
 
 	w.WriteHeader(http.StatusOK)
@@ -46,7 +49,8 @@ func (s *Subscription) postHandler(w http.ResponseWriter, r *http.Request) {
 	ap := gofeed.NewParser()
 	feed, _ := ap.Parse(r.Body)
 
-	if ShouldAct(s.Slug, feed.Items[0].GUID) {
+	if s.Cache.ShouldAct(s.Slug, feed.Items[0].GUID) {
+		log.Printf("setting %s for %s", s.Slug, feed.Items[0].GUID)
 		type payload struct {
 			Text string `json:"text"`
 		}
@@ -60,7 +64,7 @@ func (s *Subscription) postHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Subscription) MakeHandler() http.HandlerFunc {
+func (s Subscription) MakeHandler() http.HandlerFunc {
 
 	log.Printf("created %s handler", s.Slug)
 
@@ -79,11 +83,10 @@ func (s *Subscription) MakeHandler() http.HandlerFunc {
 }
 
 func (c *Config) RegisterListeners(mux *http.ServeMux) {
-	for _, listener := range c.Listeners {
+	for name, listener := range c.Listeners {
 		mux.HandleFunc(listener.endpoint(), listener.MakeHandler())
-		log.Printf("registered %s", listener.endpoint())
+		log.Printf("registered %s:%s -- %s", name, listener.Slug, listener.endpoint())
 	}
 
-	mux.HandleFunc("/status", CacheStatusHandler)
-
+	mux.HandleFunc("/status", c.Cache.CacheStatusHandler)
 }

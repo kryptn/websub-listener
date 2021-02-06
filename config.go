@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/spf13/viper"
 )
@@ -16,7 +17,7 @@ func configViper() {
 	viper.AddConfigPath("/etc/websub/") // path used in docker/k8s
 	viper.AddConfigPath(".")            // local path
 
-	viper.Debug()
+	// viper.Debug()
 	err := viper.ReadInConfig() // Find and read the config file
 
 	if err != nil {
@@ -33,16 +34,24 @@ func getConfig() *Config {
 		panic(err)
 	}
 
+	// spew.Dump(config)
+
+	cache := NewCache()
+
+	config.Cache = cache
+
 	listeners := map[string]Subscription{}
 
 	for name, listener := range config.Listeners {
 		var l Subscription
 
-		l.Slug = name
+		l.Slug = name[:]
+		log.Printf("setting config slug %s", name)
 		l.TopicURL = listener.TopicURL
 		l.VerifyToken = config.VerifyToken
 		l.Parser = listener.Parser
 		l.Destination = listener.Destination
+		l.Cache = cache
 
 		if dest, ok := config.Destinations[listener.Destination]; ok {
 			l.PostURL = dest
