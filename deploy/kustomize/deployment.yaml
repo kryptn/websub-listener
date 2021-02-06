@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: websub-listener
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: websub-listener
+    spec:
+      containers:
+      - name: websub-listener
+        image: kryptn/websub-listener:v0.0.10
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: config
+          mountPath: "/etc/websub/"
+          readOnly: true
+      volumes:
+      - name: config
+        secret:
+          secretName: websub-listener-config-secret
