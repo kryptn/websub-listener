@@ -1,16 +1,23 @@
+# the public base url for your webhooks
 publicUrl = "https://websub.example.com"
 
+# the websub hub host
 websubSubscribeHost = "https://pubsubhubbub.appspot.com/subscribe"
 
+# a token used for feed subscriptions
 verifyToken = "dILVKUkteZ5nG7U6BVhT8BZWfabaK77BDK0aev4ldt0CvCLuxS5K7qGQGjiQ5YH7"
 
+# a map of destination webhooks
 [destinations]
-notifications = "https://hooks.slack.com/services/your/incoming/webhook"
+myNotifications = "https://hooks.slack.com/services/your/incoming/webhook"
 
+# a map config for a single youtube feed
 [listener.channel1]
-topicUrl = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=CHANNEL_1_ID"
-destination = "notifications"
+# replace CHANNEL_ID
+topicUrl = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=CHANNEL_ID"
+# the webhook destination. Must match a given destination in the destinations map
+destination = "myNotifications"
 
 [listener.channel2]
-topicUrl = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=CHANNEL_2_ID"
-destination = "notifications"
+topicUrl = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=CHANNEL_ID"
+destination = "myNotifications"
