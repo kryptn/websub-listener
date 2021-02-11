@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/mmcdole/gofeed"
 )
@@ -29,10 +31,19 @@ func (s Subscription) getHandler(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			leases = []string{"3600"}
 		}
-		lease := leases[0]
+		lease, err := strconv.Atoi(leases[0])
+		if err != nil {
+			lease = 300
+		}
+
 		// spew.Dump(s)
-		s.Cache.SetLease(s.Slug, lease)
-		log.Printf("setting lease %s for %s", s.Slug, lease)
+
+		err = s.Cache.SetKey(s.Slug, lease, time.Duration(lease)*time.Second)
+		if err != nil {
+			fmt.Println(err)
+		}
+		//s.Cache.SetLease(s.Slug, lease)
+		log.Printf("setting lease %s for %d", s.Slug, lease)
 
 		log.Printf("got challenge: %s -- responding", challenge[0])
 		w.WriteHeader(http.StatusOK)
@@ -49,8 +60,12 @@ func (s Subscription) postHandler(w http.ResponseWriter, r *http.Request) {
 	ap := gofeed.NewParser()
 	feed, _ := ap.Parse(r.Body)
 
-	if s.Cache.ShouldAct(s.Slug, feed.Items[0].GUID) {
-		log.Printf("setting %s for %s", s.Slug, feed.Items[0].GUID)
+	cacheKey := fmt.Sprintf("%s/%s", s.Slug, feed.Items[0].GUID)
+
+	if exists, _ := s.Cache.KeyExists(cacheKey); !exists {
+		s.Cache.SetKey(cacheKey, feed.Items[0].GUID, time.Duration(3)*time.Hour)
+
+		log.Printf("setting %s for %s -- %s", s.Slug, feed.Items[0].GUID, cacheKey)
 		type payload struct {
 			Text string `json:"text"`
 		}
@@ -84,9 +99,11 @@ func (s Subscription) MakeHandler() http.HandlerFunc {
 
 func (c *Config) RegisterListeners(mux *http.ServeMux) {
 	for name, listener := range c.Listeners {
-		mux.HandleFunc(listener.endpoint(), listener.MakeHandler())
-		log.Printf("registered %s:%s -- %s", name, listener.Slug, listener.endpoint())
+		func(n string, l Subscription) {
+			mux.HandleFunc(l.endpoint(), l.MakeHandler())
+			log.Printf("registered %s:%s -- %s", n, l.Slug, l.endpoint())
+		}(name, listener)
 	}
 
-	mux.HandleFunc("/status", c.Cache.CacheStatusHandler)
+	// mux.HandleFunc("/status", c.Cache.CacheStatusHandler)
 }

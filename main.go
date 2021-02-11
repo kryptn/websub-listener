@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/kryptn/websub-to-slack/internal/pkg/store"
 )
 
 var debug = false
@@ -17,7 +19,7 @@ type Config struct {
 	Destinations        map[string]string       `mapstructure:"destinations"`
 	VerifyToken         string                  `mapstructure:"verifyToken"`
 	WebsubSubscribeHost string                  `mapstructure:"websubSubscribeHost"`
-	Cache               *Cache
+	Cache               store.Store
 }
 
 type Subscription struct {
@@ -27,7 +29,7 @@ type Subscription struct {
 	Parser      string
 	PostURL     string
 	Destination string
-	Cache       *Cache
+	Cache       store.Store
 }
 
 func (s *Subscription) endpoint() string {

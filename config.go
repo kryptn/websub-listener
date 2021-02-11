@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/kryptn/websub-to-slack/internal/pkg/store"
+	"github.com/kryptn/websub-to-slack/internal/pkg/store/redis"
+
 	"github.com/spf13/viper"
 )
 
@@ -26,6 +29,23 @@ func configViper() {
 
 }
 
+func createSub(name string, listener Subscription, config *Config, s store.Store) Subscription {
+	var l Subscription
+	l.Slug = name
+	log.Printf("setting config slug %s", name)
+	l.TopicURL = listener.TopicURL
+	l.VerifyToken = config.VerifyToken
+	l.Parser = listener.Parser
+	l.Destination = listener.Destination
+	l.Cache = s
+
+	if dest, ok := config.Destinations[listener.Destination]; ok {
+		l.PostURL = dest
+	}
+
+	return l
+}
+
 func getConfig() *Config {
 	var config Config
 
@@ -36,28 +56,15 @@ func getConfig() *Config {
 
 	// spew.Dump(config)
 
-	cache := NewCache()
+	// config.Cache = memory.NewMemoryStore()
 
-	config.Cache = cache
+	config.Cache = redis.NewRedisStore(redis.DefaultConfig())
 
 	listeners := map[string]Subscription{}
 
 	for name, listener := range config.Listeners {
-		var l Subscription
+		listeners[name] = createSub(name, listener, &config, config.Cache)
 
-		l.Slug = name
-		log.Printf("setting config slug %s", name)
-		l.TopicURL = listener.TopicURL
-		l.VerifyToken = config.VerifyToken
-		l.Parser = listener.Parser
-		l.Destination = listener.Destination
-		l.Cache = cache
-
-		if dest, ok := config.Destinations[listener.Destination]; ok {
-			l.PostURL = dest
-		}
-
-		listeners[name] = l
 	}
 
 	config.Listeners = listeners

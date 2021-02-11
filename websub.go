@@ -79,15 +79,16 @@ func (c *Config) WatchSubs(timeout int) {
 
 	go func() {
 		for true {
-			now := time.Now().Unix()
 			for name, listener := range c.Listeners {
-				lease, ok := c.Cache.Leases[name]
-				if !ok || now > lease {
+				hasLease, err := c.Cache.KeyExists(name)
+				if err != nil {
+					panic(err)
+				}
+				if !hasLease {
 					log.Printf("renewing %s subscription", name)
 					listener.RenewSubscription()
-				} else {
-					log.Printf("%s subscription has %d seconds left", name, lease-now)
 				}
+
 			}
 
 			time.Sleep(waitTime)
