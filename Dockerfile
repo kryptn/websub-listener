@@ -3,7 +3,7 @@ FROM golang:1.15.8 AS builder
 WORKDIR $GOPATH/src/kryptn/websub-listener/
 COPY . .
 
-RUN go get -d -v
+RUN go get -d -v ./...
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags='-w -s -extldflags "-static"' -a \
