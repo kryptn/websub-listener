@@ -74,7 +74,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	emitters, err := emitter.EmittersFromConfig(config)
+	emitters, err := emitter.EmittersFromConfig(config, store)
 	if err != nil {
 		log.Fatal(err)
 	}

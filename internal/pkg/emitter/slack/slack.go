@@ -45,11 +45,12 @@ func (s *Slack) Write(p []byte) (n int, err error) {
 	return 0, nil
 }
 
-func NewSlackEmitter(name, webhookURL string) *Slack {
+func NewSlackEmitter(name, webhookURL string, store store.Store) *Slack {
 
 	s := Slack{
-		name: name,
+		name:            name,
 		incomingWebhook: webhookURL,
+		store:           store,
 	}
 
 	return &s
