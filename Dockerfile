@@ -7,7 +7,7 @@ RUN go get -d -v
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags='-w -s -extldflags "-static"' -a \
-    -o /go/bin/websub .
+    -o /go/bin/websub github.com/kryptn/websub-to-slack/cmd/websub
 
 FROM scratch
 

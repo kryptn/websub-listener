@@ -1,23 +1,46 @@
 # the public base url for your webhooks
-publicUrl = "https://websub.example.com"
-
-# the websub hub host
-websubSubscribeHost = "https://pubsubhubbub.appspot.com/subscribe"
+publicHostname = "https://websub.example.com"
 
 # a token used for feed subscriptions
 verifyToken = "dILVKUkteZ5nG7U6BVhT8BZWfabaK77BDK0aev4ldt0CvCLuxS5K7qGQGjiQ5YH7"
 
-# a map of destination webhooks
-[destinations]
-myNotifications = "https://hooks.slack.com/services/your/incoming/webhook"
+[store]
+# one of: "memory", "redis"
+kind = "memory"
 
-# a map config for a single youtube feed
-[listener.channel1]
-# replace CHANNEL_ID
-topicUrl = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=CHANNEL_ID"
-# the webhook destination. Must match a given destination in the destinations map
-destination = "myNotifications"
+# defaults for redis:
+addr = ""
+password = ""
+db = 0
 
-[listener.channel2]
+[listener.listener_a]
+# one of: "websub"
+handler = "websub"
+
+# the websub hub host
+hubUrl = "https://pubsubhubbub.appspot.com/subscribe"
+# the topic url you're subscribing to
 topicUrl = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=CHANNEL_ID"
-destination = "myNotifications"
+
+
+[listener.listener_b]
+handler = "websub"
+
+hubUrl = "https://pubsubhubbub.appspot.com/subscribe"
+topicUrl = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=CHANNEL_ID_2"
+
+[emitter.emitter_a]
+# one of: "slack"
+handler = "slack"
+# make an app, add that app to your slack, then generate an incoming webhook
+incomingWebhook = "https://hooks.slack.comm/services/.../.../..."
+
+[emitter.emitter_b]
+handler = "slack"
+incomingWebhook = "https://hooks.slack.comm/services/.../.../..."
+
+
+[wires]
+# connect the dots
+listener_a = ["emitter_a"]
+listener_b = ["emitter_a", "emitter_b"]
