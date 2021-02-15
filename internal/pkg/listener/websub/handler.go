@@ -1,13 +1,12 @@
 package websub
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -63,6 +62,10 @@ func (c *WebSubConfig) postHandler(event chan<- io.Reader) http.HandlerFunc {
 		ap := gofeed.NewParser()
 		feed, _ := ap.Parse(r.Body)
 
+		if len(feed.Items) == 0 {
+			return
+		}
+
 		cacheKey := fmt.Sprintf("%s/%s", c.Name, feed.Items[0].GUID)
 
 		if exists, _ := c.store.KeyExists(cacheKey); !exists {
@@ -73,11 +76,8 @@ func (c *WebSubConfig) postHandler(event chan<- io.Reader) http.HandlerFunc {
 				Text string `json:"text"`
 			}
 
-			p := payload{Text: fmt.Sprintf("%s -- %s", feed.Items[0].Author.Name, feed.Items[0].Link)}
-
-			out, _ := json.Marshal(&p)
-
-			event <- bytes.NewReader(out)
+			message := fmt.Sprintf("%s -- %s", feed.Items[0].Author.Name, feed.Items[0].Link)
+			event <- strings.NewReader(message)
 		}
 	}
 }

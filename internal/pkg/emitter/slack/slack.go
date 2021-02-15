@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
-	"time"
 
 	"github.com/kryptn/websub-to-slack/internal/pkg/store"
-	"github.com/mmcdole/gofeed"
 )
 
 type Slack struct {
@@ -23,26 +22,19 @@ func (s *Slack) Write(p []byte) (n int, err error) {
 		Text string `json:"text"`
 	}
 
-	ap := gofeed.NewParser()
-	feed, _ := ap.Parse(bytes.NewReader(p))
-
-	cacheKey := fmt.Sprintf("%s/%s", s.name, feed.Items[0].GUID)
-
-	exists, _ := s.store.KeyExists(cacheKey)
-	if exists {
-		return 0, nil
-	}
-
-	s.store.SetKey(cacheKey, feed.Items[0].GUID, time.Duration(3)*time.Hour)
-
-	pt := payload{Text: fmt.Sprintf("%s -- %s", feed.Items[0].Author.Name, feed.Items[0].Link)}
+	pt := payload{Text: fmt.Sprintf(string(p))}
 
 	out, _ := json.Marshal(&pt)
 	buf := bytes.NewBuffer(out)
 
-	http.Post(s.incomingWebhook, "application/json", buf)
+	resp, err := http.Post(s.incomingWebhook, "application/json", buf)
+	if err != nil {
+		log.Printf("uhhh %v", err)
+		return 0, err
+	}
+	log.Printf("webhook %s -- %s", s.name, resp.Status)
 
-	return 0, nil
+	return len(p), nil
 }
 
 func NewSlackEmitter(name, webhookURL string, store store.Store) *Slack {
