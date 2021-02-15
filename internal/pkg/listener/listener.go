@@ -25,9 +25,13 @@ func ListenersFromConfig(config *config.Config, mux *http.ServeMux, store store.
 	for name, listener := range config.Listeners {
 		switch listener.Handler {
 		case "websub":
-			defaultSeconds := 60 * 60 * 2
-			healthcheckUrl := fmt.Sprintf("%s/healthz", config.PublicHostname)
-			listeners[name] = websub.NewWebsubListener(name, listener.TopicURL, listener.HubURL, config.PublicHostname, config.VerifyToken, mux, store, defaultSeconds, healthcheckUrl)
+			defaultSeconds := 60 * 60 * 18 
+			if listener.LeaseSeconds != 0 {
+				defaultSeconds = listener.LeaseSeconds
+			}
+
+			healthcheckURL := fmt.Sprintf("%s/healthz", config.PublicHostname)
+			listeners[name] = websub.NewWebsubListener(name, listener.TopicURL, listener.HubURL, config.PublicHostname, config.VerifyToken, mux, store, defaultSeconds, healthcheckURL)
 		case "webhook":
 			listeners[name] = webhook.NewWebhookListener(mux)
 		default:

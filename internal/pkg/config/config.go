@@ -29,8 +29,9 @@ type Listener struct {
 	Handler string
 
 	// websub specific
-	TopicURL string
-	HubURL   string
+	TopicURL     string
+	HubURL       string
+	LeaseSeconds int
 }
 
 type Emitter struct {
