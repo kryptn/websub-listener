@@ -39,6 +39,9 @@ type Emitter struct {
 
 	// slack
 	IncomingWebhook string
+
+	// forwarder
+	Endpoint string
 }
 
 type Store struct {

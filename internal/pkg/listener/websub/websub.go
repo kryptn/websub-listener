@@ -123,6 +123,7 @@ func (c *WebSubConfig) handleResubscription(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			log.Printf("context was cancelled in sub watcher %s", c.Name)
 			return
 		case <-ticker.C:
 			hasLease, _ := c.store.KeyExists(c.Name)

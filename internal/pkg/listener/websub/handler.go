@@ -69,7 +69,7 @@ func (c *WebSubConfig) postHandler(event chan<- io.Reader) http.HandlerFunc {
 		cacheKey := fmt.Sprintf("%s/%s", c.Name, feed.Items[0].GUID)
 
 		if exists, _ := c.store.KeyExists(cacheKey); !exists {
-			c.store.SetKey(cacheKey, feed.Items[0].GUID, time.Duration(3)*time.Hour)
+			c.store.SetKey(cacheKey, feed.Items[0].GUID, time.Duration(12)*time.Hour)
 
 			log.Printf("setting %s for %s -- %s", c.Name, feed.Items[0].GUID, cacheKey)
 			type payload struct {

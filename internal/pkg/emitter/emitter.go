@@ -3,6 +3,7 @@ package emitter
 import (
 	"io"
 
+	"github.com/kryptn/websub-to-slack/internal/pkg/emitter/forward"
 	"github.com/kryptn/websub-to-slack/internal/pkg/emitter/slack"
 	"github.com/kryptn/websub-to-slack/internal/pkg/store"
 
@@ -19,6 +20,9 @@ func EmittersFromConfig(config *config.Config, store store.Store) (map[string]io
 		case "slack":
 			slackConfig := slack.NewSlackEmitter(name, emitterConfig.IncomingWebhook, store)
 			emitters[name] = slackConfig
+		case "forward":
+			forwarderConfig := forward.NewForwarder(name, emitterConfig.Endpoint)
+			emitters[name] = forwarderConfig
 		default:
 			continue
 

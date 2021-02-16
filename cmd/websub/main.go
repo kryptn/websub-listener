@@ -16,7 +16,7 @@ import (
 	"github.com/kryptn/websub-to-slack/internal/pkg/store"
 )
 
-func awaitSignals() {
+func awaitSignals(cancel context.CancelFunc) {
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
 
@@ -26,6 +26,8 @@ func awaitSignals() {
 		sig := <-sigs
 		fmt.Println()
 		fmt.Println(sig)
+		cancel()
+		log.Print("cancelled context")
 		done <- true
 	}()
 
@@ -55,7 +57,7 @@ func distribute(ctx context.Context, r <-chan io.Reader, w ...io.Writer) {
 
 func main() {
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 
 	config, err := config.GetConfig()
 	if err != nil {
@@ -106,5 +108,5 @@ func main() {
 		log.Fatal(http.ListenAndServe(":8080", mux))
 	}()
 
-	awaitSignals()
+	awaitSignals(cancel)
 }
